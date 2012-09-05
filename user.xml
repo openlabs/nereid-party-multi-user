@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <!--
+        This file is part of Tryton & Nereid. The COPYRIGHT file at the
+        top level of this repository contains the full copyright notices
+        and license terms.
+    -->
+<tryton>
+    <data>
+
+        <record id="inherit_nereid_user" model="ir.ui.view">
+            <field name="model">nereid.user</field>
+            <field name="inherit" ref="nereid.nereid_user_form2"/>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <data>
+                    <xpath expr="/form/field[@name='party']" position="after">
+                        <label name="display_name" />
+                        <field name="display_name" />
+                    </xpath>
+                </data>
+                ]]>
+            </field>
+        </record>
+
+        <record id="inherit_nereid_user_tree" model="ir.ui.view">
+            <field name="model">nereid.user</field>
+            <field name="inherit" ref="nereid.nereid_user_tree"/>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <data>
+                    <xpath expr="/tree/field[@name='name']" position="after">
+                        <field name="display_name" />
+                    </xpath>
+                </data>
+                ]]>
+            </field>
+        </record>
+
+    </data>
+</tryton>

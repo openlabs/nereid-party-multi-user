@@ -21,6 +21,7 @@ Example usage:
     ],
     'xml': [
        'user.xml',
+       'urls.xml',
     ],
     'translation': [
     ],

@@ -214,11 +214,11 @@ class TestNereidMultiUserCase(NereidTestCase):
 
 
 def suite():
-    suite = trytond.tests.test_tryton.suite()
-    suite.addTests(
+    test_suite = trytond.tests.test_tryton.suite()
+    test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestNereidMultiUserCase)
     )
-    return suite
+    return test_suite
 
 
 if __name__ == '__main__':

@@ -17,6 +17,11 @@
                         <label name="display_name" />
                         <field name="display_name" />
                     </xpath>
+                    <xpath expr="/form/notebook/page[@id='permissions']" position="before">
+                        <page string="Parties" id="parties">
+                            <field name="parties" colspan="4"/>
+                        </page>
+                    </xpath>
                 </data>
                 ]]>
             </field>

@@ -46,6 +46,7 @@ class NereidUser(ModelSQL, ModelView):
         for party in request.nereid_user.parties:
             if party.id == party_id:
                 self.write(request.nereid_user.id, {'party': party.id})
+                break
         else:
             flash("The party is not valid")
         return redirect(

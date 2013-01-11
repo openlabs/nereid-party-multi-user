@@ -48,13 +48,8 @@ To migrate the existing m2o/o2m relationship between party and nereid user
 
 SQL::
 
-    INSERT INTO "nereid_user-party_party" (
-        SELECT  id,
-                create_date, write_date,
-                create_uid, write_uid,
-                id AS nereid_user,
-                party
-        FROM nereid_user
+    INSERT INTO "nereid_user-party_party" (nereid_user, party) (
+        SELECT  id AS nereid_user, party FROM nereid_user
     );
 
 To migrate the name of the `party` as the `display_name`

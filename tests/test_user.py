@@ -30,13 +30,6 @@ class TestNereidMultiUserCase(NereidTestCase):
 
     def setUp(self):
         trytond.tests.test_tryton.install_module('nereid_party_multi_user')
-        self.nereid_website_obj = POOL.get('nereid.website')
-        self.nereid_user_obj = POOL.get('nereid.user')
-        self.url_map_obj = POOL.get('nereid.url_map')
-        self.company_obj = POOL.get('company.company')
-        self.currency_obj = POOL.get('currency.currency')
-        self.language_obj = POOL.get('ir.lang')
-        self.party_obj = POOL.get('party.party')
 
         # Patch SMTP Lib
         self.smtplib_patcher = patch('smtplib.SMTP')
@@ -62,28 +55,35 @@ class TestNereidMultiUserCase(NereidTestCase):
         """
         Setup the defaults
         """
-        usd = self.currency_obj.create({
+        Currency = POOL.get('currency.currency')
+        Company = POOL.get('company.company')
+        NereidUser = POOL.get('nereid.user')
+        UrlMap = POOL.get('nereid.url_map')
+        Language = POOL.get('ir.lang')
+        NereidWebsite = POOL.get('nereid.website')
+
+        usd = Currency.create({
             'name': 'US Dollar',
             'code': 'USD',
             'symbol': '$',
         })
-        company_id = self.company_obj.create({
+        company = Company.create({
             'name': 'Openlabs',
-            'currency': usd
+            'currency': usd.id,
         })
-        guest_user = self.nereid_user_obj.create({
+        guest_user = NereidUser.create({
             'name': 'Guest User',
             'display_name': 'Guest User',
             'email': 'guest@openlabs.co.in',
             'password': 'password',
-            'company': company_id,
+            'company': company.id,
         })
-        url_map_id, = self.url_map_obj.search([], limit=1)
-        en_us, = self.language_obj.search([('code', '=', 'en_US')])
-        website_id = self.nereid_website_obj.create({
+        url_map, = UrlMap.search([], limit=1)
+        en_us, = Language.search([('code', '=', 'en_US')])
+        NereidWebsite.create({
             'name': 'localhost',
-            'url_map': url_map_id,
-            'company': company_id,
+            'url_map': url_map.id,
+            'company': company.id,
             'application_user': USER,
             'default_language': en_us,
             'guest_user': guest_user,
@@ -104,6 +104,8 @@ class TestNereidMultiUserCase(NereidTestCase):
         """
         Test the registration workflow
         """
+        NereidUser = POOL.get('nereid.user')
+
         with Transaction().start(DB_NAME, USER, CONTEXT) as txn:
             self.setup_defaults()
             app = self.get_app()
@@ -123,7 +125,7 @@ class TestNereidMultiUserCase(NereidTestCase):
                 response = c.post('/en_US/registration', data=data)
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(
-                    self.nereid_user_obj.search([
+                    NereidUser.search([
                         ('email', '=', 'new.test@example.com')
                     ], count=True), 0
                 )
@@ -133,7 +135,7 @@ class TestNereidMultiUserCase(NereidTestCase):
                 response = c.post('/en_US/registration', data=data)
                 self.assertEqual(response.status_code, 302)
                 self.assertEqual(
-                    self.nereid_user_obj.search([
+                    NereidUser.search([
                         ('email', '=', 'new.test@example.com')
                     ], count=True), 1
                 )
@@ -143,28 +145,31 @@ class TestNereidMultiUserCase(NereidTestCase):
         """
         Test switching between companies of the user
         """
-        with Transaction().start(DB_NAME, USER, CONTEXT) as txn:
+        Company = POOL.get('company.company')
+        NereidUser = POOL.get('nereid.user')
+        Party = POOL.get('party.party')
+
+        with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
-            company_id, = self.company_obj.search([])
-            regd_user_id = self.nereid_user_obj.create({
+            company, = Company.search([])
+            regd_user = NereidUser.create({
                 'name': 'Registered User',
                 'display_name': 'Registered User',
                 'email': 'regd-user@openlabs.co.in',
                 'password': 'password',
-                'company': company_id,
+                'company': company.id,
             })
-            regd_user = self.nereid_user_obj.browse(regd_user_id)
             self.assertEqual(len(regd_user.parties), 1)
-            parent_co = regd_user.party.id
+            parent_co = regd_user.party
 
             # Add a part time company
-            part_time_co = self.party_obj.create({'name': 'Part time co LLC'})
-            self.nereid_user_obj.write(
-                regd_user.id, {'parties': [('add', [part_time_co])]}
+            part_time_co = Party.create({'name': 'Part time co LLC'})
+            NereidUser.write(
+                [regd_user],
+                {'parties': [('add', [part_time_co.id])]}
             )
-            regd_user = self.nereid_user_obj.browse(regd_user_id)
             self.assertEqual(len(regd_user.parties), 2)
 
             with app.test_client() as c:
@@ -181,34 +186,33 @@ class TestNereidMultiUserCase(NereidTestCase):
                 self.assertEqual(resp.status_code, 302)
 
                 # Rebrowse the record and check if the new party is set
-                regd_user = self.nereid_user_obj.browse(regd_user_id)
-                self.assertEqual(regd_user.party.id, part_time_co)
+                self.assertEqual(regd_user.party, part_time_co)
 
                 # Switch to the previous company
                 resp = c.get('/en_US/change-current-party/%d' % parent_co)
                 self.assertEqual(resp.status_code, 302)
 
                 # Rebrowse the record and check if the new party is set
-                regd_user = self.nereid_user_obj.browse(regd_user_id)
-                self.assertEqual(regd_user.party.id, parent_co)
+                self.assertEqual(regd_user.party, parent_co)
 
     def test0030_check_reverse_relationship(self):
         """
         Check the reverse relationship between party and the user
         """
-        with Transaction().start(DB_NAME, USER, CONTEXT) as txn:
-            self.setup_defaults()
-            app = self.get_app()
+        Company = POOL.get('company.company')
+        NereidUser = POOL.get('nereid.user')
 
-            company_id, = self.company_obj.search([])
-            regd_user_id = self.nereid_user_obj.create({
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+
+            company, = Company.search([])
+            regd_user = NereidUser.create({
                 'name': 'Registered User',
                 'display_name': 'Registered User',
                 'email': 'regd-user@openlabs.co.in',
                 'password': 'password',
-                'company': company_id,
+                'company': company.id,
             })
-            regd_user = self.nereid_user_obj.browse(regd_user_id)
             self.assertEqual(len(regd_user.parties), 1)
             self.assertEqual(len(regd_user.party.nereid_users), 1)
 

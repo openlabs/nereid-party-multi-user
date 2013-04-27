@@ -1,6 +1,23 @@
 Nereid Party Mutli User
 =======================
 
+Build Status 
+------------
+
+master
+++++++
+
+.. image:: https://travis-ci.org/openlabs/nereid-party-multi-user.png?branch=master
+
+develop
++++++++
+
+.. image:: https://travis-ci.org/openlabs/nereid-party-multi-user.png?branch=develop
+
+
+Introduction
+------------
+
 This module addresses the following issues:
 
 1. A nereid user having multiple parties associated to it.

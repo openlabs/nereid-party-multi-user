@@ -28,15 +28,16 @@ class NereidUser:
     )
 
     @classmethod
-    def create(cls, values):
+    def create(cls, vlist):
         """
         Add the current party of the user to the list of parties allowed for
         the user automatically
         """
-        user = super(NereidUser, cls).create(values)
-        if 'parties' not in values:
-            cls.write([user], {'parties': [('add', [user.party.id])]})
-        return user
+        users = super(NereidUser, cls).create(vlist)
+        for user in users:
+            if user.party not in user.parties:
+                cls.write([user], {'parties': [('add', [user.party.id])]})
+        return users
 
     @classmethod
     @login_required

@@ -35,6 +35,12 @@ class TestNereidMultiUserCase(NereidTestCase):
         self.smtplib_patcher = patch('smtplib.SMTP')
         self.PatchedSMTP = self.smtplib_patcher.start()
 
+        self.templates = {
+            'registration.jinja': 'registration',
+            'emails/activation-text.jinja': 'activation-email-text',
+            'emails/activation-html.jinja': 'activation-email-html',
+        }
+
     def tearDown(self):
         # Unpatch SMTP Lib
         self.smtplib_patcher.stop()
@@ -61,44 +67,41 @@ class TestNereidMultiUserCase(NereidTestCase):
         UrlMap = POOL.get('nereid.url_map')
         Language = POOL.get('ir.lang')
         NereidWebsite = POOL.get('nereid.website')
+        Party = POOL.get('party.party')
 
-        usd = Currency.create({
+        party1, = Party.create([{
+            'name': 'Openlabs',
+        }])
+
+        party2, = Party.create([{
+            'name': 'Guest User',
+        }])
+        usd, = Currency.create([{
             'name': 'US Dollar',
             'code': 'USD',
             'symbol': '$',
-        })
-        company = Company.create({
-            'name': 'Openlabs',
+        }])
+        company, = Company.create([{
+            'party': party1.id,
             'currency': usd.id,
-        })
-        guest_user = NereidUser.create({
-            'name': 'Guest User',
+        }])
+        guest_user, = NereidUser.create([{
+            'party': party2.id,
             'display_name': 'Guest User',
             'email': 'guest@openlabs.co.in',
             'password': 'password',
             'company': company.id,
-        })
+        }])
         url_map, = UrlMap.search([], limit=1)
         en_us, = Language.search([('code', '=', 'en_US')])
-        NereidWebsite.create({
+        NereidWebsite.create([{
             'name': 'localhost',
             'url_map': url_map.id,
             'company': company.id,
             'application_user': USER,
             'default_language': en_us,
             'guest_user': guest_user,
-        })
-
-    def get_template_source(self, name):
-        """
-        Return templates
-        """
-        templates = {
-            'localhost/registration.jinja': 'registration',
-            'localhost/emails/activation-text.jinja': 'activation-email-text',
-            'localhost/emails/activation-html.jinja': 'activation-email-html',
-        }
-        return templates.get(name)
+        }])
 
     def test0010registration(self):
         """
@@ -152,20 +155,23 @@ class TestNereidMultiUserCase(NereidTestCase):
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
             app = self.get_app()
+            party1, = Party.create([{
+                'name': 'Registerd user',
+            }])
 
             company, = Company.search([])
-            regd_user = NereidUser.create({
-                'name': 'Registered User',
+            regd_user, = NereidUser.create([{
+                'party': party1.id,
                 'display_name': 'Registered User',
                 'email': 'regd-user@openlabs.co.in',
                 'password': 'password',
                 'company': company.id,
-            })
+            }])
             self.assertEqual(len(regd_user.parties), 1)
             parent_co = regd_user.party
 
             # Add a part time company
-            part_time_co = Party.create({'name': 'Part time co LLC'})
+            part_time_co, = Party.create([{'name': 'Part time co LLC'}])
             NereidUser.write(
                 [regd_user],
                 {'parties': [('add', [part_time_co.id])]}
@@ -201,20 +207,61 @@ class TestNereidMultiUserCase(NereidTestCase):
         """
         Company = POOL.get('company.company')
         NereidUser = POOL.get('nereid.user')
+        Party = POOL.get('party.party')
 
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
+            party1, = Party.create([{
+                'name': 'Registerd user',
+            }])
 
             company, = Company.search([])
-            regd_user = NereidUser.create({
-                'name': 'Registered User',
+            regd_user, = NereidUser.create([{
+                'party': party1.id,
                 'display_name': 'Registered User',
                 'email': 'regd-user@openlabs.co.in',
                 'password': 'password',
                 'company': company.id,
-            })
+            }])
             self.assertEqual(len(regd_user.parties), 1)
             self.assertEqual(len(regd_user.party.nereid_users), 1)
+
+    def test0040_create_nereid_users(self):
+        """
+        Create more than one users
+        """
+        Company = POOL.get('company.company')
+        NereidUser = POOL.get('nereid.user')
+        Party = POOL.get('party.party')
+
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            party1, party2 = Party.create([
+                {
+                    'name': 'party1',
+                }, {
+                    'name': 'party2',
+                }
+            ])
+
+            company, = Company.search([])
+            nereid_user1, nereid_user2 = NereidUser.create([
+                {
+                    'party': party1.id,
+                    'display_name': 'Party1',
+                    'email': 'party1@openlabs.co.in',
+                    'password': 'password',
+                    'company': company.id,
+                }, {
+                    'party': party2.id,
+                    'display_name': 'Party 2',
+                    'email': 'party2@openlabs.co.in',
+                    'password': 'password',
+                    'company': company.id,
+                }
+            ])
+            self.assertEqual(nereid_user1.parties[0].id, party1.id)
+            self.assertEqual(nereid_user2.parties[0].id, party2.id)
 
 
 def suite():

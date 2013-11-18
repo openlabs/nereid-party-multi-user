@@ -68,6 +68,7 @@ class TestNereidMultiUserCase(NereidTestCase):
         Language = POOL.get('ir.lang')
         NereidWebsite = POOL.get('nereid.website')
         Party = POOL.get('party.party')
+        Locale = POOL.get('nereid.website.locale')
 
         party1, = Party.create([{
             'name': 'Openlabs',
@@ -94,12 +95,18 @@ class TestNereidMultiUserCase(NereidTestCase):
         }])
         url_map, = UrlMap.search([], limit=1)
         en_us, = Language.search([('code', '=', 'en_US')])
+        locale_en_us, = Locale.create([{
+            'code': 'en_US',
+            'language': en_us.id,
+            'currency': usd.id
+        }])
+
         NereidWebsite.create([{
             'name': 'localhost',
             'url_map': url_map.id,
             'company': company.id,
             'application_user': USER,
-            'default_language': en_us,
+            'default_locale': locale_en_us.id,
             'guest_user': guest_user,
         }])
 
@@ -114,7 +121,7 @@ class TestNereidMultiUserCase(NereidTestCase):
             app = self.get_app()
 
             with app.test_client() as c:
-                response = c.get('/en_US/registration')
+                response = c.get('/registration')
                 self.assertEqual(response.status_code, 200)
 
             data = {
@@ -125,7 +132,7 @@ class TestNereidMultiUserCase(NereidTestCase):
             with app.test_client() as c:
                 # Record should not be created because there is no confirm
                 # password
-                response = c.post('/en_US/registration', data=data)
+                response = c.post('/registration', data=data)
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(
                     NereidUser.search([
@@ -135,7 +142,7 @@ class TestNereidMultiUserCase(NereidTestCase):
             with app.test_client() as c:
                 # It should be successfully created since all data is correct
                 data['confirm'] = 'password'
-                response = c.post('/en_US/registration', data=data)
+                response = c.post('/registration', data=data)
                 self.assertEqual(response.status_code, 302)
                 self.assertEqual(
                     NereidUser.search([
@@ -181,21 +188,21 @@ class TestNereidMultiUserCase(NereidTestCase):
             with app.test_client() as c:
                 # Login
                 resp = c.post(
-                    '/en_US/login', data={
+                    '/login', data={
                         'email': 'regd-user@openlabs.co.in',
                         'password': 'password',
                     }
                 )
 
                 # Switch to the new company
-                resp = c.get('/en_US/change-current-party/%d' % part_time_co)
+                resp = c.get('/change-current-party/%d' % part_time_co)
                 self.assertEqual(resp.status_code, 302)
 
                 # Rebrowse the record and check if the new party is set
                 self.assertEqual(regd_user.party, part_time_co)
 
                 # Switch to the previous company
-                resp = c.get('/en_US/change-current-party/%d' % parent_co)
+                resp = c.get('/change-current-party/%d' % parent_co)
                 self.assertEqual(resp.status_code, 302)
 
                 # Rebrowse the record and check if the new party is set

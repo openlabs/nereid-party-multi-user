@@ -73,7 +73,6 @@ class NereidUserParty(ModelSQL):
     )
 
 
-
 class Party:
     """
     Party

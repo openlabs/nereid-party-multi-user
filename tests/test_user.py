@@ -140,16 +140,17 @@ class TestNereidMultiUserCase(NereidTestCase):
                     ], count=True), 0
                 )
             with app.test_client() as c:
+                with Transaction().set_context(active_test=False):
                 # It should be successfully created since all data is correct
-                data['confirm'] = 'password'
-                response = c.post('/registration', data=data)
-                self.assertEqual(response.status_code, 302)
-                self.assertEqual(
-                    NereidUser.search([
-                        ('email', '=', 'new.test@example.com')
-                    ], count=True), 1
-                )
-            txn.cursor.rollback()
+                    data['confirm'] = 'password'
+                    response = c.post('/registration', data=data)
+                    self.assertEqual(response.status_code, 302)
+                    self.assertEqual(
+                        NereidUser.search([
+                            ('email', '=', 'new.test@example.com')
+                        ], count=True), 1
+                    )
+                txn.cursor.rollback()
 
     def test0020_switch_company(self):
         """

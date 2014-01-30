@@ -13,10 +13,6 @@
             <field name="arch" type="xml">
                 <![CDATA[
                 <data>
-                    <xpath expr="/form/field[@name='party']" position="after">
-                        <label name="display_name" />
-                        <field name="display_name" />
-                    </xpath>
                     <xpath expr="/form/notebook/page[@id='permissions']" position="before">
                         <page string="Parties" id="parties">
                             <field name="parties" colspan="4"/>

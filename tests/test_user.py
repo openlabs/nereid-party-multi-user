@@ -4,7 +4,7 @@
 
     Test the multi user implementation
 
-    :copyright: (c) 2013 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: (c) 2013-2014 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
 import unittest
@@ -141,7 +141,8 @@ class TestNereidMultiUserCase(NereidTestCase):
                 )
             with app.test_client() as c:
                 with Transaction().set_context(active_test=False):
-                # It should be successfully created since all data is correct
+                    # It should be successfully created since all data is
+                    # correct
                     data['confirm'] = 'password'
                     response = c.post('/registration', data=data)
                     self.assertEqual(response.status_code, 302)

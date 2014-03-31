@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-#This file is part of Tryton.  The COPYRIGHT file at the top level of
-#this repository contains the full copyright notices and license terms.
+# This file is part of Tryton.  The COPYRIGHT file at the top level of
+# this repository contains the full copyright notices and license terms.
 
 from setuptools import setup
 import re
 import os
 import ConfigParser
+
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -24,19 +25,26 @@ module_name = 'nereid_party_multi_user'
 requires = []
 for dep in info.get('depends', []):
     if not re.match(r'(ir|res|webdav)(\W|$)', dep):
-        requires.append('trytond_%s >= %s.%s, < %s.%s' %
-                (dep, major_version, minor_version, major_version,
-                    minor_version + 1))
-requires.append('trytond >= %s.%s, < %s.%s' %
-        (major_version, minor_version, major_version, minor_version + 1))
+        requires.append(
+            'trytond_%s >= %s.%s, < %s.%s' % (
+                dep, major_version, minor_version, major_version,
+                minor_version + 1
+            )
+        )
+requires.append(
+    'trytond >= %s.%s, < %s.%s' % (
+         major_version, minor_version, major_version, minor_version + 1
+    )
+)
 
-setup(name='trytond_%s' % module_name,
+setup(
+    name='trytond_%s' % module_name,
     version=info.get('version', '0.0.1'),
     description=info.get('description', ''),
     author=info.get('author', ''),
     author_email=info.get('email', ''),
     url=info.get('website', ''),
-    download_url="http://downloads.tryton.org/" + \
+    download_url="http://downloads.tryton.org/" +
             info.get('version', '0.0.1').rsplit('.', 1)[0] + '/',
     package_dir={'trytond.modules.%s' % module_name: '.'},
     packages=[
@@ -44,7 +52,7 @@ setup(name='trytond_%s' % module_name,
         'trytond.modules.%s.tests' % module_name,
     ],
     package_data={
-        'trytond.modules.%s' % module_name: info.get('xml', []) \
+        'trytond.modules.%s' % module_name: info.get('xml', [])
             + ['tryton.cfg', 'locale/*.po', 'tests/*.rst'],
     },
     classifiers=[
@@ -71,4 +79,3 @@ setup(name='trytond_%s' % module_name,
     test_loader='trytond.test_loader:Loader',
     tests_require=['mock'],
 )
-

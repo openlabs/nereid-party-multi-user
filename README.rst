@@ -8,11 +8,19 @@ master
 ++++++
 
 .. image:: https://travis-ci.org/openlabs/nereid-party-multi-user.png?branch=master
+  :target: https://travis-ci.org/openlabs/nereid-party-multi-user
 
 develop
 +++++++
 
 .. image:: https://travis-ci.org/openlabs/nereid-party-multi-user.png?branch=develop
+  :target: https://travis-ci.org/openlabs/nereid-party-multi-user
+
+Coverage
+--------
+
+.. image:: https://coveralls.io/repos/openlabs/nereid-party-multi-user/badge.png
+  :target: https://coveralls.io/r/openlabs/nereid-party-multi-user
 
 
 Introduction

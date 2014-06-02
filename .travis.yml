@@ -4,4 +4,11 @@ python:
   - "2.7"
 install:
   - python setup.py install
-script: python setup.py test
+  - pip install coveralls
+script:
+  - coverage run setup.py test
+after_success:
+  coveralls
+notifications:
+  email:
+    - ci-notify@openlabs.co.in

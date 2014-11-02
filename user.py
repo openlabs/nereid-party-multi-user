@@ -7,7 +7,7 @@
 """
 from trytond.model import ModelSQL, fields
 from trytond.pool import PoolMeta
-from nereid import login_required, request, flash, redirect, url_for
+from nereid import login_required, request, flash, redirect, url_for, jsonify
 
 __all__ = ['NereidUser', 'NereidUserParty', 'Party']
 __metaclass__ = PoolMeta
@@ -53,7 +53,15 @@ class NereidUser:
                 cls.write([request.nereid_user], {'party': party.id})
                 break
         else:
+            if request.is_xhr:
+                return jsonify(
+                    error='The party is not valid'
+                ), 400
             flash("The party is not valid")
+        if request.is_xhr:
+            return jsonify(
+                success='Party has been changed successfully'
+            )
         return redirect(
             request.args.get('next', url_for('nereid.website.home'))
         )

@@ -7,7 +7,8 @@
 """
 from trytond.model import ModelSQL, fields
 from trytond.pool import PoolMeta
-from nereid import login_required, request, flash, redirect, url_for, jsonify
+from nereid import login_required, request, flash, redirect, url_for, jsonify, \
+     route
 
 __all__ = ['NereidUser', 'NereidUserParty', 'Party']
 __metaclass__ = PoolMeta
@@ -41,6 +42,7 @@ class NereidUser:
 
     @classmethod
     @login_required
+    @route('/change-current-party/<int:party_id>')
     def change_party(cls, party_id):
         """
         Updates the current party of the nereid_user to the new party_id if

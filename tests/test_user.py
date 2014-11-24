@@ -63,7 +63,6 @@ class TestNereidMultiUserCase(NereidTestCase):
         """
         Currency = POOL.get('currency.currency')
         Company = POOL.get('company.company')
-        NereidUser = POOL.get('nereid.user')
         UrlMap = POOL.get('nereid.url_map')
         Language = POOL.get('ir.lang')
         NereidWebsite = POOL.get('nereid.website')
@@ -86,13 +85,6 @@ class TestNereidMultiUserCase(NereidTestCase):
             'party': party1.id,
             'currency': usd.id,
         }])
-        guest_user, = NereidUser.create([{
-            'party': party2.id,
-            'display_name': 'Guest User',
-            'email': 'guest@openlabs.co.in',
-            'password': 'password',
-            'company': company.id,
-        }])
         url_map, = UrlMap.search([], limit=1)
         en_us, = Language.search([('code', '=', 'en_US')])
         locale_en_us, = Locale.create([{
@@ -107,7 +99,6 @@ class TestNereidMultiUserCase(NereidTestCase):
             'company': company.id,
             'application_user': USER,
             'default_locale': locale_en_us.id,
-            'guest_user': guest_user,
         }])
 
     def test0010registration(self):

@@ -7,7 +7,8 @@
 """
 from trytond.model import ModelSQL, fields
 from trytond.pool import PoolMeta
-from nereid import login_required, request, flash, redirect, url_for, jsonify
+from nereid import login_required, request, flash, redirect, url_for, jsonify, \
+     route
 
 __all__ = ['NereidUser', 'NereidUserParty', 'Party']
 __metaclass__ = PoolMeta
@@ -28,6 +29,24 @@ class NereidUser:
     )
 
     @classmethod
+    def __setup__(cls):
+        super(NereidUser, cls).__setup__()
+        cls._error_messages.update({
+            "party_not_in_parties": "Party missing from Parties",
+        })
+
+    @classmethod
+    def validate(cls, users):
+        super(NereidUser, cls).validate(users)
+
+        for user in users:
+            user.validate_party()
+
+    def validate_party(self):
+        if self.parties and self.party not in self.parties:
+            self.raise_user_error('party_not_in_parties')
+
+    @classmethod
     def create(cls, vlist):
         """
         Add the current party of the user to the list of parties allowed for
@@ -41,6 +60,7 @@ class NereidUser:
 
     @classmethod
     @login_required
+    @route('/change-current-party/<int:party_id>')
     def change_party(cls, party_id):
         """
         Updates the current party of the nereid_user to the new party_id if

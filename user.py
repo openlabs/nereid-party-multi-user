@@ -29,6 +29,24 @@ class NereidUser:
     )
 
     @classmethod
+    def __setup__(cls):
+        super(NereidUser, cls).__setup__()
+        cls._error_messages.update({
+            "party_not_in_parties": "Party missing from Parties",
+        })
+
+    @classmethod
+    def validate(cls, users):
+        super(NereidUser, cls).validate(users)
+
+        for user in users:
+            user.validate_party()
+
+    def validate_party(self):
+        if self.parties and self.party not in self.parties:
+            self.raise_user_error('party_not_in_parties')
+
+    @classmethod
     def create(cls, vlist):
         """
         Add the current party of the user to the list of parties allowed for

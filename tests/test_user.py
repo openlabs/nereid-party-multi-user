@@ -4,7 +4,7 @@
 
     Test the multi user implementation
 
-    :copyright: (c) 2013-2014 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: (c) 2013-2015 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
 import unittest
@@ -13,17 +13,11 @@ from mock import patch
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import test_view, test_depends, POOL, USER, \
     DB_NAME, CONTEXT
-from trytond.config import CONFIG
+from trytond.config import config
 from trytond.transaction import Transaction
 from nereid.testing import NereidTestCase
 
-
-CONFIG['smtp_server'] = 'smtpserver'
-CONFIG['smtp_user'] = 'test@xyz.com'
-CONFIG['smtp_password'] = 'testpassword'
-CONFIG['smtp_port'] = 587
-CONFIG['smtp_tls'] = True
-CONFIG['smtp_from'] = 'from@xyz.com'
+config.set('email', 'from', 'from@xyz.com')
 
 
 class TestNereidMultiUserCase(NereidTestCase):
@@ -63,7 +57,6 @@ class TestNereidMultiUserCase(NereidTestCase):
         """
         Currency = POOL.get('currency.currency')
         Company = POOL.get('company.company')
-        UrlMap = POOL.get('nereid.url_map')
         Language = POOL.get('ir.lang')
         NereidWebsite = POOL.get('nereid.website')
         Party = POOL.get('party.party')
@@ -85,7 +78,6 @@ class TestNereidMultiUserCase(NereidTestCase):
             'party': party1.id,
             'currency': usd.id,
         }])
-        url_map, = UrlMap.search([], limit=1)
         en_us, = Language.search([('code', '=', 'en_US')])
         locale_en_us, = Locale.create([{
             'code': 'en_US',
@@ -95,7 +87,6 @@ class TestNereidMultiUserCase(NereidTestCase):
 
         NereidWebsite.create([{
             'name': 'localhost',
-            'url_map': url_map.id,
             'company': company.id,
             'application_user': USER,
             'default_locale': locale_en_us.id,
